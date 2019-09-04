@@ -1,3 +1,5 @@
+[![Coverage Status](https://coveralls.io/repos/github/xaionaro-go/picapi/badge.svg?branch=master)](https://coveralls.io/github/xaionaro-go/picapi?branch=master)
+
 # Introduction
 
 "PicAPI" is an HTTP-server which implements a method to download a JPEG image and resize it.
