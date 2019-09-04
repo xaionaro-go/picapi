@@ -14,8 +14,12 @@ type Printfer interface {
 
 // AccessLogger wraps the `handler` to log requests via `logger` (like `access.log`)
 func AccessLogger(logger Printfer, handler fasthttp.RequestHandler) fasthttp.RequestHandler {
+	if logger == nil {
+		return handler
+	}
+
 	return func(ctx *fasthttp.RequestCtx) {
 		handler(ctx)
-		logger.Printf("[%v] %v %v\n", ctx.Response.StatusCode(), string(ctx.Method()), string(ctx.RequestURI()))
+		logger.Printf("[%v] %v %v %v\n", ctx.Response.StatusCode(), string(ctx.Method()), string(ctx.RequestURI()), len(ctx.Response.Body()))
 	}
 }

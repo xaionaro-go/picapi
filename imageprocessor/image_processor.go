@@ -2,7 +2,7 @@ package imageprocessor
 
 import (
 	imageprocessorcommon "github.com/xaionaro-go/picapi/imageprocessor/common"
-	imageprocessorgraphicsmagick "github.com/xaionaro-go/picapi/imageprocessor/graphicsmagick"
+	imageprocessorgraphicsmagick "github.com/xaionaro-go/picapi/imageprocessor/imaging"
 )
 
 // ImageProcessor is a tool to manipulate images

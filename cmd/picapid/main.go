@@ -33,11 +33,11 @@ func main() {
 
 	// TODO: uses a logger with native support of multi-leveling ("fatal", "error", "info" etc)
 
-	var accessLogger *log.Logger
-	var handlerLogger *log.Logger
+	var accessLogger httpserver.Printfer
+	var handlerLogger httpserver.Printfer
 	if cfg.LoggingLevel == `debug` {
-		accessLogger = log.New(os.Stderr, `[picapid] [access]`, 0)
-		handlerLogger = log.New(os.Stderr, `[picapid] [handler]`, 0)
+		accessLogger = log.New(os.Stderr, `[picapid] [access] `, 0)
+		handlerLogger = log.New(os.Stderr, `[picapid] [handler] `, 0)
 	}
 
 	srv, err := httpserver.NewHTTPServer(

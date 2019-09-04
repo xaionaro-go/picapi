@@ -42,6 +42,8 @@ type HTTPServer struct {
 	httpBackend  *fasthttp.Server
 	httpRouter   *fasthttprouter.Router
 
+	accessLogger Printfer
+
 	// ImageProcessor is the implementation of image manipulation tool
 	ImageProcessor imageprocessor.ImageProcessor
 }
@@ -79,6 +81,7 @@ func NewHTTPServer(
 
 	handler := middlewares.RecoverPanic(srv.httpRouter.Handler)
 	if accessLogger != nil {
+		srv.accessLogger = accessLogger
 		handler = middlewares.AccessLogger(accessLogger, handler)
 	}
 	srv.httpBackend.Handler = handler
@@ -104,6 +107,8 @@ func (srv *HTTPServer) Start(
 		return
 	}
 
+	srv.accessLogger.Printf("started\n")
+
 	srv.context, srv.stopFunc = context.WithCancel(ctx)
 	srv.stopWaitGroup.Add(1)
 	go func() {
@@ -117,7 +122,9 @@ func (srv *HTTPServer) Start(
 		select {
 		case <-srv.Done():
 		}
+		srv.accessLogger.Printf("stopping\n")
 		srv.httpBackend.Shutdown()
+		srv.accessLogger.Printf("stopped\n")
 		srv.httpListener.Close()
 	}()
 
