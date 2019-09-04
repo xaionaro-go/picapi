@@ -27,8 +27,13 @@ func TestHTTPServerHandleResize(t *testing.T) {
 	}
 
 	checkRequest(200, `/resize?width=100&height=100&url=test_picture`)
+	checkRequest(400, `/resize?height=100&url=test_picture`)
+	checkRequest(400, `/resize?width=100&url=test_picture`)
+	checkRequest(400, `/resize?width=100&height=100`)
 	checkRequest(400, `/resize?width=0&height=100&url=test_picture`)
 	checkRequest(400, `/resize?width=-100&height=100&url=test_picture`)
 	checkRequest(400, `/resize?width=100000&height=100&url=test_picture`)
+	checkRequest(400, `/resize?width=100&height=0&url=test_picture`)
+	checkRequest(400, `/resize?width=100&height=-100&url=test_picture`)
 	checkRequest(502, `/resize?width=100&height=100&url=htttp://invalid_url/`)
 }
