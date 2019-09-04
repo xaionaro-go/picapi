@@ -34,3 +34,10 @@ sudo apt-get install libgraphicsmagick1-dev
 ```
 
 If you're unable to use external libraries (like `graphicsmagick`) then you can switch to a native implementation (`imageprocessorimaging` or `imageprocessornfntresize` instead of `imageprocessorgraphicsmagick`) in file `imageprocessor/image_processor.go`.
+
+### Run
+
+```sh
+go get github.com/xaionaro-go/picapi/cmd/picapid
+PICAPI_LOGGING_LEVEL=debug $(go env GOPATH)/bin/picapid
+```

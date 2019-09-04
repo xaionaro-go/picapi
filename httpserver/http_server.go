@@ -107,7 +107,7 @@ func (srv *HTTPServer) Start(
 		return
 	}
 
-	srv.accessLogger.Printf("started\n")
+	srv.accessLogger.Printf("started to listen at %v\n", listenAddress)
 
 	srv.context, srv.stopFunc = context.WithCancel(ctx)
 	srv.stopWaitGroup.Add(1)
