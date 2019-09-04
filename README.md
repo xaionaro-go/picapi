@@ -35,9 +35,43 @@ sudo apt-get install libgraphicsmagick1-dev
 
 If you're unable to use external libraries (like `graphicsmagick`) then you can switch to a native implementation (`imageprocessorimaging` or `imageprocessornfntresize` instead of `imageprocessorgraphicsmagick`) in file `imageprocessor/image_processor.go`.
 
-### Run
+### Install
 
 ```sh
 go get github.com/xaionaro-go/picapi/cmd/picapid
+```
+
+### Run
+
+```sh
 PICAPI_LOGGING_LEVEL=debug $(go env GOPATH)/bin/picapid
+```
+
+# Performance test
+
+```sh
+$(go env GOPATH)/bin/picapid &
+$(go env GOPATH)/bin/gobench -u 'http://localhost:8486/resize?width=10&height=10&url=https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Fc%2Fc7%2FJPS-sample.jpg' -t 10
+```
+
+```
+Dispatching 100 clients
+Waiting for results...
+
+Requests:                           856792 hits
+Successful requests:                856792 hits
+Network failed:                          0 hits
+Bad requests failed (!2xx):              0 hits
+Successful requests rate:            85679 hits/sec
+Read throughput:                  78311428 bytes/sec
+Write throughput:                 16966600 bytes/sec
+Test time:                              10 sec
+```
+
+```
+cpufreq-info  | grep 'current policy' | head -1; echo; grep 'model name' /proc/cpuinfo  | head -1
+
+  current policy: frequency should be within 800 MHz and 3.70 GHz.
+  
+model name      : Intel(R) Core(TM) i7-4800MQ CPU @ 2.70GHz
 ```
