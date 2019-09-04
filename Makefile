@@ -1,5 +1,5 @@
 all:
-	@echo Makefile is only for developers' needs
+	@echo "Makefile is only for developers' needs"
 
 coveralls:
 	go get golang.org/x/tools/cmd/cover
