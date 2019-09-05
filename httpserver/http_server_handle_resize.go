@@ -125,6 +125,8 @@ func (srv *HTTPServer) handleResize(ctx *fasthttp.RequestCtx) {
 
 	// Download the image
 
+	// TODO: consider if we should cache downloaded images
+
 	downloadStartTS := time.Now()
 	sourceBody, err := srv.download(ctx.Done(), `GET`, sourceURL)
 	if err != nil {
