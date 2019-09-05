@@ -79,3 +79,33 @@ func TestHTTPServerStartStopWithNilLogger(t *testing.T) {
 	err = srv.Stop()
 	assert.NoError(t, err)
 }
+
+func TestHTTPServerStartCancel(t *testing.T) {
+	srv, err := NewHTTPServer(&dummyImageProcessor{}, nil, nil)
+	assert.NoError(t, err)
+
+	ctx, cancelFunc := context.WithCancel(context.Background())
+
+	srv.Start(ctx, ``)
+
+	reqCtx := &fasthttp.RequestCtx{}
+	reqCtx.Request.SetRequestURI(`/resize?width=100&height=100&url=test_picture`)
+	*unsafetools.FieldByName(reqCtx, `s`).(**fasthttp.Server) = srv.httpBackend
+
+	wg := sync.WaitGroup{}
+
+	wg.Add(1)
+	go func() {
+		srv.httpBackend.Handler(reqCtx)
+		wg.Done()
+	}()
+
+	cancelFunc()
+
+	wg.Wait()
+
+	srv.Wait()
+
+	srv.Start(context.Background(), ``)
+	srv.Stop()
+}
