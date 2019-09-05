@@ -19,7 +19,7 @@ func TestHTTPServerHandleResize(t *testing.T) {
 
 	checkRequest := func(expectedStatusCode int, uri string) {
 		ctx := &fasthttp.RequestCtx{}
-		*(**fasthttp.Server)(unsafetools.FieldByName(ctx, `s`, (**fasthttp.Server)(nil))) = srv.httpBackend
+		*unsafetools.FieldByName(ctx, `s`).(**fasthttp.Server) = srv.httpBackend
 		ctx.Request.SetRequestURI(uri)
 		srv.httpRouter.Handler(ctx)
 
