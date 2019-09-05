@@ -17,6 +17,7 @@ func newCacheURILocker() *cacheURILocker {
 
 func (l *cacheURILocker) Lock(uri string) {
 	for {
+		// At first we try RLock to reduce a bottleneck in case of too many waiting requests
 		l.mapLocker.RLock()
 		uriLocker := l.lockerMap[uri]
 		l.mapLocker.RUnlock()
@@ -41,9 +42,9 @@ func (l *cacheURILocker) Lock(uri string) {
 
 		uriLocker = &sync.Mutex{}
 		l.lockerMap[uri] = uriLocker
+		uriLocker.Lock()
 		l.mapLocker.Unlock()
 
-		uriLocker.Lock()
 		break
 	}
 }
