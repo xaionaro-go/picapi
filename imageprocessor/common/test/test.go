@@ -44,6 +44,15 @@ func CommonTestResize(proc imageprocessorcommon.ImageProcessor, t *testing.T) {
 		if diff > 0.2 { // We're scaling noises, so huge diffs (up-to 0.2) is OK.
 			t.Errorf(`images-diff is too high: %v`, diff)
 		}
+
+		width, height := getSize(writer.Bytes())
+		if width != item.OutputWidth {
+			t.Errorf(`wrong resulting width: %v (expected %v)`, width, item.OutputWidth)
+		}
+
+		if height != item.OutputHeight {
+			t.Errorf(`wrong resulting height: %v (expected %v)`, height, item.OutputHeight)
+		}
 	}
 
 	// Negative testing:
@@ -123,4 +132,12 @@ func diffImages(aBytes, bBytes []byte) float64 {
 	}
 
 	return float64(totalDiff) / float64(count)
+}
+
+func getSize(b []byte) (width, height uint) {
+	img, err := jpeg.Decode(bytes.NewReader(b))
+	panicIfError(err)
+
+	size := img.Bounds().Size()
+	return uint(size.X), uint(size.Y)
 }
