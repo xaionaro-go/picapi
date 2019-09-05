@@ -129,9 +129,13 @@ func (srv *HTTPServer) Start(
 		select {
 		case <-srv.Done():
 		}
-		srv.accessLogger.Printf("stopping\n")
+		if srv.accessLogger != nil {
+			srv.accessLogger.Printf("stopping\n")
+		}
 		srv.httpBackend.Shutdown()
-		srv.accessLogger.Printf("stopped\n")
+		if srv.accessLogger != nil {
+			srv.accessLogger.Printf("stopped\n")
+		}
 		srv.httpListener.Close()
 		srv.context = nil
 	}()
