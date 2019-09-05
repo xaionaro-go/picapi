@@ -75,3 +75,10 @@ cpufreq-info  | grep 'current policy' | head -1; echo; grep 'model name' /proc/c
   
 model name      : Intel(R) Core(TM) i7-4800MQ CPU @ 2.70GHz
 ```
+
+# Packages
+
+* `imageprocessor` is a wrapper around different image manipulation tools (like imagemagick). Currently we use `graphicsmagick` as the backend.
+* `httpserver` is a wrapper around an http router (currently we use `fasthttprouter`) and `imageprocessor` to serve incoming HTTP requests.
+* `main` (`cmd/picapid`) is the entry-point/executable package.
+* `config` is just a structure to configure the `main`.
