@@ -82,3 +82,7 @@ model name      : Intel(R) Core(TM) i7-4800MQ CPU @ 2.70GHz
 * `httpserver` is a wrapper around an http router (currently we use `fasthttprouter`) and `imageprocessor` to serve incoming HTTP requests.
 * `main` (`cmd/picapid`) is the entry-point/executable package.
 * `config` is just a structure to configure the `main`.
+
+# Image Processors
+
+You mean switch it to another image processor in file `imageprocessor/image_processor.go`. See [benchmarks](imageprocessor/README.md).
