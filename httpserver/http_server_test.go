@@ -68,3 +68,14 @@ func TestHTTPServerStartStop(t *testing.T) {
 	}()
 	assert.Error(t, err)
 }
+
+func TestHTTPServerStartStopWithNilLogger(t *testing.T) {
+	srv, err := NewHTTPServer(&dummyImageProcessor{}, nil, nil)
+	assert.NoError(t, err)
+
+	err = srv.Start(context.Background(), "")
+	assert.NoError(t, err)
+
+	err = srv.Stop()
+	assert.NoError(t, err)
+}

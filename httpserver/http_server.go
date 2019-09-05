@@ -27,6 +27,9 @@ var (
 
 	// ErrNotStarted is returned when method `Stop` is called on a non-started-yet `HTTPServer`.
 	ErrNotStarted = errors.New(`not started`)
+
+	// ErrImageProcessorIsRequireed is returned when NewHTTPServer is called with nil `proc`.
+	ErrImageProcessorIsRequireed = errors.New(`image processor is required`)
 )
 
 // HTTPServer is the implemention of an HTTP server which implements `picapi`'s methods
@@ -71,6 +74,10 @@ func NewHTTPServer(
 	handlerLogger Printfer,
 ) (srv *HTTPServer, err error) {
 	defer func() { err = errors.Wrap(err) }()
+
+	if proc == nil {
+		return nil, ErrImageProcessorIsRequireed
+	}
 
 	srv = &HTTPServer{
 		ImageProcessor: proc,
