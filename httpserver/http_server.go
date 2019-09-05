@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"runtime"
 	"sync"
 
 	"github.com/buaazp/fasthttprouter"
@@ -135,6 +136,7 @@ func (srv *HTTPServer) Start(
 		srv.context = nil
 	}()
 
+	runtime.Gosched() // to allow `Serve` to initialize the server
 	return
 }
 
