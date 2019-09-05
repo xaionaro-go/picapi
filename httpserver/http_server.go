@@ -61,7 +61,9 @@ type Printfer interface {
 // `HTTPServer` will not be started automatically. It's required to call method `Start`
 // to start it.
 //
-// `logLevel`'s allowed values are: "fatal", "error", "warning", "info", "debug".
+// `accessLogger` is used to log requests (similar to an "access.log").
+//
+// `handlerLogger` is used to log errors and warnings by handlers (similar to "error.log")
 func NewHTTPServer(
 	proc imageprocessor.ImageProcessor,
 	accessLogger Printfer,
@@ -75,7 +77,7 @@ func NewHTTPServer(
 
 	srv.httpBackend = &fasthttp.Server{
 		Name:   `picapi ` + version,
-		Logger: handlerLogger,
+		Logger: handlerLogger, // TODO: reconsider logging system to correctly comply to logging levels
 	}
 	srv.httpRouter = srv.newRouter()
 
