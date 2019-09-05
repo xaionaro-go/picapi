@@ -114,7 +114,7 @@ func (srv *HTTPServer) Start(
 	}
 
 	srv.context, srv.stopFunc = context.WithCancel(ctx)
-	srv.stopWaitGroup.Add(1)
+	srv.stopWaitGroup.Add(2)
 	go func() {
 		defer srv.stopWaitGroup.Done()
 
@@ -123,6 +123,8 @@ func (srv *HTTPServer) Start(
 		)
 	}()
 	go func() {
+		defer srv.stopWaitGroup.Done()
+
 		select {
 		case <-srv.Done():
 		}
@@ -130,6 +132,7 @@ func (srv *HTTPServer) Start(
 		srv.httpBackend.Shutdown()
 		srv.accessLogger.Printf("stopped\n")
 		srv.httpListener.Close()
+		srv.context = nil
 	}()
 
 	return
@@ -149,7 +152,6 @@ func (srv *HTTPServer) Stop() (err error) {
 
 	srv.stopFunc()
 	srv.Wait()
-	srv.context = nil
 	return nil
 }
 

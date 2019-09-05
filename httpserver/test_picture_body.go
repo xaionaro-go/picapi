@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"io"
+	"runtime"
 	"strings"
 )
 
@@ -38,6 +39,11 @@ type testPictureBodyStruct struct {
 }
 
 func testPictureBody() io.ReadCloser {
+	// Gosched is for unit tests to imitate of waiting for response
+	// from the remote party
+	runtime.Gosched()
+
+	// return the reader
 	return &testPictureBodyStruct{bytes.NewReader(testPictureBodyValue)}
 }
 
