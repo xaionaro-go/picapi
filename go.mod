@@ -13,5 +13,4 @@ require (
 	github.com/valyala/fasthttp v1.4.0
 	github.com/xaionaro-go/errors v0.0.0-20190618051035-77224f41226e
 	github.com/xaionaro-go/unsafetools v0.0.0-20190905074538-ce749a1b4314
-	gopkg.in/gographics/imagick.v2 v2.5.0
 )
