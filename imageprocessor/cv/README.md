@@ -1,5 +1,7 @@
 ### Install build dependencies (Debian/Ubuntu)
 
 ```sh
-sudo apt-get install libvips-dev
+go get -u -d gocv.io/x/gocv
+cd "$(go env GOPATH)"/src/gocv.io/x/gocv
+make install
 ```
