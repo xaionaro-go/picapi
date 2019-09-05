@@ -105,8 +105,8 @@ func (srv *HTTPServer) getParamsResize(ctx *fasthttp.RequestCtx) (width, height 
 // handleResize is the handler for `GET /resize`
 func (srv *HTTPServer) handleResize(ctx *fasthttp.RequestCtx) {
 	// Caution:
-	// * This method could be used a DDoS-attack multiplier. So it's required to hide it from the public access.
-	// * There's no stoppers if the server is already overloaded.
+	// * This method could be used as a DDoS-attack multiplier. So it's required to hide it from the public access.
+	// * There's no stoppers if the server is already overloaded (or there're obviously too many requests).
 	// * Here's pretty stupid HTTP-getter, so there could be a lot of hanged connections.
 	// * We don't check a resolution of the incoming image
 
