@@ -109,6 +109,8 @@ func (srv *HTTPServer) handleResize(ctx *fasthttp.RequestCtx) {
 	// * There's no stoppers if the server is already overloaded (or there're obviously too many requests).
 	// * Here's pretty stupid HTTP-getter, so there could be a lot of hanged connections.
 	// * We don't check a resolution of the incoming image
+	// * The URL is checked very weakly. So there may be vulnerabilities. It's required to discuss what is permitted and what is not.
+	//   For example is it permitted to use localhost URLs?
 
 	// Initializing
 
