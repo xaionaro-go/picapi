@@ -10,6 +10,8 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
+// TODO: consider if we should use an LRU cache instead
+
 // Cache wraps the `handler` returns a new handler which will cache responses
 // (and return responses from the cache if there's an actual record) for a time
 // interval `maxDuration`.
