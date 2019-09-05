@@ -3,8 +3,8 @@ package httpserver
 import (
 	"context"
 	"io"
+	"io/ioutil"
 	"log"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -25,7 +25,7 @@ func (proc *dummyImageProcessor) Resize(
 }
 
 func TestHTTPServerStartStop(t *testing.T) {
-	logger := log.New(os.Stderr, ``, 0)
+	logger := log.New(ioutil.Discard, ``, 0)
 
 	srv, err := NewHTTPServer(&dummyImageProcessor{}, logger, logger)
 	assert.NoError(t, err)
