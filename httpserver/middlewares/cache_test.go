@@ -112,7 +112,7 @@ func TestCache_concurrentRequests(t *testing.T) {
 	assert.Equal(t, string(ctx0.Response.Body()), string(ctx1.Response.Body()))
 }
 
-func TestCache_envict(t *testing.T) {
+func TestCache_evict(t *testing.T) {
 	handler := getTestHandler()
 
 	for i := 0; i < testCacheMaxEntries+1; i++ {
