@@ -6,15 +6,16 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/patrickmn/go-cache"
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/valyala/fasthttp"
 )
-
-// TODO: consider if we should use an LRU cache instead
 
 // Cache wraps the `handler` returns a new handler which will cache responses
 // (and return responses from the cache if there's an actual record) for a time
 // interval `maxDuration`.
+//
+// To limit memory usage there're parameters `maxEntries` and `maxEntrySize`.
+// Total consumed memory (by this middleware) could be estimated as `maxEntries * maxEntrySize`.
 //
 // Also this middleware controls HTTP header `Cache-Control` to ask a browser to cache
 // the response on it's side, too.
@@ -22,28 +23,54 @@ import (
 // If there were received two similar (with the same URI) concurrent requests then
 // it will wait for the execution of one of them then will just return the cached
 // value to the second one.
-func Cache(maxDuration time.Duration, handler fasthttp.RequestHandler) fasthttp.RequestHandler {
-	return newCacheFilter(maxDuration, handler).Handler
+func Cache(
+	maxEntries uint64,
+	maxEntrySize uint64,
+	maxDuration time.Duration,
+	handler fasthttp.RequestHandler,
+) fasthttp.RequestHandler {
+	return newCacheFilter(
+		maxEntries,
+		maxEntrySize,
+		maxDuration,
+		handler,
+	).Handler
 }
 
 type cacheFilter struct {
 	NextHandler        fasthttp.RequestHandler
 	HeaderCacheControl string
+	MaxEntrySize       uint64
 	MaxDuration        time.Duration
-	Storage            *cache.Cache
+	Storage            *lru.TwoQueueCache
 	URILocker          *cacheURILocker
 }
 
-func newCacheFilter(maxDuration time.Duration, handler fasthttp.RequestHandler) *cacheFilter {
+func newCacheFilter(
+	maxEntries uint64,
+	maxEntrySize uint64,
+	maxDuration time.Duration,
+	handler fasthttp.RequestHandler,
+) *cacheFilter {
 	if maxDuration.Seconds() <= 1 {
 		// TODO: report error
 	}
 
+	cacheStorage, err := lru.New2QParams(
+		int(maxEntries),
+		0.15,
+		0.5,
+	)
+	if err != nil {
+		panic(err)
+	}
+
 	return &cacheFilter{
 		NextHandler:        handler,
+		MaxEntrySize:       maxEntrySize,
 		MaxDuration:        maxDuration,
 		HeaderCacheControl: fmt.Sprintf(`max-age=%d`, uint64(maxDuration.Seconds())),
-		Storage:            cache.New(maxDuration, maxDuration),
+		Storage:            cacheStorage,
 		URILocker:          newCacheURILocker(),
 	}
 }
@@ -66,7 +93,8 @@ func (c *cacheFilter) Handler(ctx *fasthttp.RequestCtx) {
 	defer c.URILocker.Unlock(uriString)
 
 	// Try from cache
-	if cacheItem, success := c.fillResponseFromCache(ctx, uriString); success {
+	cacheItem, filledFromCache := c.fillResponseFromCache(ctx, uriString)
+	if filledFromCache {
 		// OK, the reply is already placed into `ctx`.
 		//
 		// But we also want to save it to the client-side cache:
@@ -89,7 +117,7 @@ func (c *cacheFilter) Handler(ctx *fasthttp.RequestCtx) {
 	}
 
 	// Save to the server-side cache
-	c.saveResponseToCache(ctx, uriString)
+	c.saveToCacheFromResponse(cacheItem, ctx, uriString)
 
 	// Save to the client-side cache
 	ctx.Response.Header.Set(`Cache-Control`, c.HeaderCacheControl)
@@ -122,10 +150,23 @@ func (c *cacheFilter) fillResponseFromCache(ctx *fasthttp.RequestCtx, uriString 
 	return
 }
 
-func (c *cacheFilter) saveResponseToCache(ctx *fasthttp.RequestCtx, uriString string) {
-	c.Storage.Set(
-		uriString,
-		newCacheItem(&ctx.Response, time.Now().Add(c.MaxDuration)),
-		cache.DefaultExpiration,
-	)
+func (c *cacheFilter) saveToCacheFromResponse(cacheItem *cacheItem, ctx *fasthttp.RequestCtx, uriString string) {
+	if estimateCacheItemSizeFor(ctx) > c.MaxEntrySize {
+		if cacheItem != nil {
+			c.Storage.Remove(uriString)
+		}
+		return
+	}
+
+	alreadyAdded := cacheItem != nil
+	if !alreadyAdded {
+		cacheItem = newCacheItem()
+	}
+
+	cacheItem.FillFrom(ctx)
+	cacheItem.ExpireTS = time.Now().Add(c.MaxDuration)
+
+	if !alreadyAdded {
+		c.Storage.Add(uriString, cacheItem)
+	}
 }

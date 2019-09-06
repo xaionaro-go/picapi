@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"time"
+	"unsafe"
 
 	"github.com/valyala/fasthttp"
 
@@ -11,6 +12,10 @@ import (
 var (
 	// ErrCacheItemExpired is returned when it was called an `Apply()` on an expired cache item.
 	ErrCacheItemExpired = errors.New(`cache item has expired`)
+)
+
+var (
+	sizeOfCacheItemStruct = uint64(unsafe.Sizeof(cacheItem{}))
 )
 
 type cacheItem struct {
@@ -30,19 +35,35 @@ type cacheItem struct {
 // newCacheItem returns a new cache item with a copy of the response "resp".
 //
 // The item will not be valid after the moment `expireTS`.
-func newCacheItem(resp *fasthttp.Response, expireTS time.Time) *cacheItem {
-	c := &cacheItem{
-		ExpireTS:   expireTS,
-		StatusCode: resp.StatusCode(),
-	}
+func newCacheItem() *cacheItem {
+	return &cacheItem{}
+}
+
+// FillFromResponse will the item by the data from response `resp`.
+//
+// So if `Apply` will be called it will fill the response by this data.
+func (c *cacheItem) FillFrom(ctx *fasthttp.RequestCtx) {
+	resp := &ctx.Response
+
+	c.StatusCode = resp.StatusCode()
 
 	body := resp.Body()
 	c.Body = make([]byte, len(body))
 	copy(c.Body, body)
 
 	c.ContentType = string(resp.Header.Peek(`Content-Type`))
+}
 
-	return c
+func estimateCacheItemSizeFor(ctx *fasthttp.RequestCtx) uint64 {
+	resp := &ctx.Response
+	return uint64(len(resp.Body())) +
+		uint64(len(resp.Header.Peek(`Content-Type`))) +
+		sizeOfCacheItemStruct
+}
+
+// Size returns an estimation of how much memory this item consumes
+func (c *cacheItem) Size() uint64 {
+	return uint64(len(c.Body)) + uint64(len(c.ContentType)) + sizeOfCacheItemStruct
 }
 
 // Apply sends the response from the cache.

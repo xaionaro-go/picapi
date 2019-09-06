@@ -44,6 +44,9 @@ func main() {
 		imageprocessor.NewImageProcessor(),
 		accessLogger,
 		handlerLogger,
+		cfg.CacheDuration,
+		cfg.CacheMaxEntries,
+		cfg.CacheMaxEntrySize,
 	)
 	fatalIfError(err)
 

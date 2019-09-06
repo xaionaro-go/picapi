@@ -8,10 +8,17 @@ import (
 	"github.com/xaionaro-go/picapi/httpserver/middlewares"
 )
 
-func (srv *HTTPServer) newRouter() *fasthttprouter.Router {
+func (srv *HTTPServer) newRouter(
+	cacheDuration time.Duration,
+	cacheMaxEntries uint64,
+	cacheMaxEntrySize uint64,
+) *fasthttprouter.Router {
 	router := fasthttprouter.New()
 
-	router.GET(`/resize`, middlewares.Cache(time.Hour, srv.handleResize))
+	router.GET(`/resize`, middlewares.Cache(
+		cacheMaxEntries, cacheMaxEntrySize, cacheDuration,
+		srv.handleResize,
+	))
 
 	return router
 }

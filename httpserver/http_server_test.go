@@ -8,9 +8,11 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/kelseyhightower/envconfig"
 	"github.com/stretchr/testify/assert"
 	"github.com/valyala/fasthttp"
 
+	"github.com/xaionaro-go/picapi/config"
 	"github.com/xaionaro-go/picapi/httpserver/helpers"
 	imageprocessorcommon "github.com/xaionaro-go/picapi/imageprocessor/common"
 	"github.com/xaionaro-go/unsafetools"
@@ -27,13 +29,34 @@ func (proc *dummyImageProcessor) Resize(
 	return
 }
 
-func TestHTTPServerStartStop(t *testing.T) {
+func testDummyServer(t *testing.T) *HTTPServer {
 	logger := log.New(ioutil.Discard, ``, 0)
 
-	srv, err := NewHTTPServer(&dummyImageProcessor{}, logger, logger)
-	assert.NoError(t, err)
+	var cfg config.Config
+	err := envconfig.Process("picapi", &cfg)
+	if t != nil {
+		assert.NoError(t, err)
+	}
 
-	err = srv.Start(context.Background(), "")
+	srv, err := NewHTTPServer(
+		&dummyImageProcessor{},
+		logger,
+		logger,
+		cfg.CacheDuration,
+		cfg.CacheMaxEntries,
+		cfg.CacheMaxEntrySize,
+	)
+	if t != nil {
+		assert.NoError(t, err)
+	}
+
+	return srv
+}
+
+func TestHTTPServerStartStop(t *testing.T) {
+	srv := testDummyServer(t)
+
+	err := srv.Start(context.Background(), "")
 	assert.NoError(t, err)
 
 	err = srv.Stop()
@@ -70,10 +93,9 @@ func TestHTTPServerStartStop(t *testing.T) {
 }
 
 func TestHTTPServerStartStopWithNilLogger(t *testing.T) {
-	srv, err := NewHTTPServer(&dummyImageProcessor{}, nil, nil)
-	assert.NoError(t, err)
+	srv := testDummyServer(t)
 
-	err = srv.Start(context.Background(), "")
+	err := srv.Start(context.Background(), "")
 	assert.NoError(t, err)
 
 	err = srv.Stop()
@@ -81,8 +103,7 @@ func TestHTTPServerStartStopWithNilLogger(t *testing.T) {
 }
 
 func TestHTTPServerStartCancel(t *testing.T) {
-	srv, err := NewHTTPServer(&dummyImageProcessor{}, nil, nil)
-	assert.NoError(t, err)
+	srv := testDummyServer(t)
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
 

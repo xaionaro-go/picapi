@@ -30,8 +30,8 @@ func getTestHandler() fasthttp.RequestHandler {
 		runtime.Gosched()
 	}
 
-	router.GET(`/cached`, Cache(365*24*time.Hour /* close enough to an infinite */, handler))
-	router.GET(`/negative_expire_time`, Cache(-time.Second, handler))
+	router.GET(`/cached`, Cache(1<<10, 1<<10, 365*24*time.Hour /* close enough to an infinite */, handler))
+	router.GET(`/negative_expire_time`, Cache(1<<10, 1<<10, -time.Second, handler))
 
 	return router.Handler
 }

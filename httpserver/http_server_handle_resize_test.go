@@ -2,8 +2,6 @@ package httpserver
 
 import (
 	"fmt"
-	"log"
-	"os"
 	"sync"
 	"testing"
 
@@ -14,10 +12,7 @@ import (
 )
 
 func TestHTTPServerHandleResize(t *testing.T) {
-	logger := log.New(os.Stderr, ``, 0)
-
-	srv, err := NewHTTPServer(&dummyImageProcessor{}, logger, logger)
-	assert.NoError(t, err)
+	srv := testDummyServer(t)
 
 	checkRequest := func(expectedStatusCode int, uri string) {
 		ctx := &fasthttp.RequestCtx{}
@@ -41,9 +36,7 @@ func TestHTTPServerHandleResize(t *testing.T) {
 }
 
 func BenchmarkHTTPServerResize(b *testing.B) {
-	logger := log.New(os.Stderr, ``, 0)
-
-	srv, _ := NewHTTPServer(&dummyImageProcessor{}, logger, logger)
+	srv := testDummyServer(nil)
 
 	ctxPool := sync.Pool{
 		New: func() interface{} {

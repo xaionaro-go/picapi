@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"runtime"
 	"sync"
+	"time"
 
 	"github.com/buaazp/fasthttprouter"
 	"github.com/valyala/fasthttp"
@@ -72,6 +73,9 @@ func NewHTTPServer(
 	proc imageprocessor.ImageProcessor,
 	accessLogger Printfer,
 	handlerLogger Printfer,
+	cacheDuration time.Duration,
+	cacheMaxEntries uint64,
+	cacheMaxEntrySize uint64,
 ) (srv *HTTPServer, err error) {
 	defer func() { err = errors.Wrap(err) }()
 
@@ -87,7 +91,11 @@ func NewHTTPServer(
 		Name:   `picapi ` + version,
 		Logger: handlerLogger, // TODO: reconsider logging system to correctly comply to logging levels
 	}
-	srv.httpRouter = srv.newRouter()
+	srv.httpRouter = srv.newRouter(
+		cacheDuration,
+		cacheMaxEntries,
+		cacheMaxEntrySize,
+	)
 
 	handler := middlewares.RecoverPanic(srv.httpRouter.Handler)
 	if accessLogger != nil {
