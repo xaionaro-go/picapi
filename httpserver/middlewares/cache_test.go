@@ -3,6 +3,7 @@ package middlewares
 import (
 	"fmt"
 	"runtime"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -11,6 +12,10 @@ import (
 	"github.com/buaazp/fasthttprouter"
 	"github.com/stretchr/testify/assert"
 	"github.com/valyala/fasthttp"
+)
+
+const (
+	testCacheMaxEntries = 1 << 10
 )
 
 func getTestHandler() fasthttp.RequestHandler {
@@ -30,8 +35,8 @@ func getTestHandler() fasthttp.RequestHandler {
 		runtime.Gosched()
 	}
 
-	router.GET(`/cached`, Cache(1<<10, 1<<10, 365*24*time.Hour /* close enough to an infinite */, handler))
-	router.GET(`/negative_expire_time`, Cache(1<<10, 1<<10, -time.Second, handler))
+	router.GET(`/cached`, Cache(testCacheMaxEntries, 1<<10, 365*24*time.Hour /* close enough to an infinite */, handler))
+	router.GET(`/negative_expire_time`, Cache(testCacheMaxEntries, 1<<10, -time.Second, handler))
 
 	return router.Handler
 }
@@ -105,4 +110,30 @@ func TestCache_concurrentRequests(t *testing.T) {
 	wg.Wait()
 
 	assert.Equal(t, string(ctx0.Response.Body()), string(ctx1.Response.Body()))
+}
+
+func TestCache_envict(t *testing.T) {
+	handler := getTestHandler()
+
+	for i := 0; i < testCacheMaxEntries+1; i++ {
+		ctx := &fasthttp.RequestCtx{}
+		ctx.Request.SetRequestURI(fmt.Sprintf(`/cached?i=%v`, i))
+		handler(ctx)
+		handler(ctx)
+	}
+
+	evictedCount := 0
+	for i := 0; i < testCacheMaxEntries+1; i++ {
+		ctx := &fasthttp.RequestCtx{}
+		ctx.Request.SetRequestURI(fmt.Sprintf(`/cached?i=%v`, i))
+		handler(ctx)
+		bodyInt, err := strconv.ParseUint(string(ctx.Response.Body()), 10, 64)
+		assert.NoError(t, err)
+		if bodyInt > testCacheMaxEntries+1 {
+			evictedCount++
+		}
+	}
+
+	expected := float64(testCacheMaxEntries) * CacheRecentRatio
+	assert.Equal(t, int(expected)+1, evictedCount)
 }

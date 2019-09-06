@@ -10,6 +10,18 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
+const (
+	// CacheRecentRatio is the fraction of recently added entries in the cache
+	//
+	// See more at https://godoc.org/github.com/hashicorp/golang-lru#pkg-constants
+	CacheRecentRatio = 0.15
+
+	// CacheGhostRatio is the fraction of ghost entries in the cache
+	//
+	// See more at https://godoc.org/github.com/hashicorp/golang-lru#pkg-constants
+	CacheGhostRatio = 0.5
+)
+
 // Cache wraps the `handler` returns a new handler which will cache responses
 // (and return responses from the cache if there's an actual record) for a time
 // interval `maxDuration`.
@@ -58,8 +70,8 @@ func newCacheFilter(
 
 	cacheStorage, err := lru.New2QParams(
 		int(maxEntries),
-		0.15,
-		0.5,
+		CacheRecentRatio,
+		CacheGhostRatio,
 	)
 	if err != nil {
 		panic(err)
