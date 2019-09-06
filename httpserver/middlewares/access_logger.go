@@ -1,6 +1,8 @@
 package middlewares
 
 import (
+	"time"
+
 	"github.com/valyala/fasthttp"
 )
 
@@ -19,7 +21,12 @@ func AccessLogger(logger Printfer, handler fasthttp.RequestHandler) fasthttp.Req
 	}
 
 	return func(ctx *fasthttp.RequestCtx) {
+		startTS := time.Now()
 		handler(ctx)
-		logger.Printf("[%v] %v %v %v\n", ctx.Response.StatusCode(), string(ctx.Method()), string(ctx.RequestURI()), len(ctx.Response.Body()))
+		logger.Printf("[%v] %v %v %v %v\n",
+			ctx.Response.StatusCode(),
+			string(ctx.Method()), string(ctx.RequestURI()),
+			len(ctx.Response.Body()), time.Since(startTS),
+		)
 	}
 }
