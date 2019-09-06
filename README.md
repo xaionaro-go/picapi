@@ -58,13 +58,13 @@ $(go env GOPATH)/bin/gobench -u 'http://localhost:8486/resize?width=10&height=10
 Dispatching 100 clients
 Waiting for results...
 
-Requests:                           856792 hits
-Successful requests:                856792 hits
+Requests:                          1077603 hits
+Successful requests:               1077603 hits
 Network failed:                          0 hits
 Bad requests failed (!2xx):              0 hits
-Successful requests rate:            85679 hits/sec
-Read throughput:                  78311428 bytes/sec
-Write throughput:                 16966600 bytes/sec
+Successful requests rate:           107760 hits/sec
+Read throughput:                  57007156 bytes/sec
+Write throughput:                 21339232 bytes/sec
 Test time:                              10 sec
 ```
 
