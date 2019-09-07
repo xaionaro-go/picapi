@@ -41,6 +41,16 @@ func Cache(
 	maxDuration time.Duration,
 	handler fasthttp.RequestHandler,
 ) fasthttp.RequestHandler {
+	if maxEntries <= 0 {
+		return handler
+	}
+	if maxEntrySize <= 0 {
+		return handler
+	}
+	if maxDuration <= 0 {
+		return handler
+	}
+
 	return newCacheFilter(
 		maxEntries,
 		maxEntrySize,

@@ -18,7 +18,7 @@ const (
 	testCacheMaxEntries = 1 << 10
 )
 
-func getTestHandler() fasthttp.RequestHandler {
+func getTestHandler(initFuncs ...func(*fasthttprouter.Router, fasthttp.RequestHandler)) fasthttp.RequestHandler {
 	router := fasthttprouter.New()
 
 	var count uint32
@@ -36,7 +36,11 @@ func getTestHandler() fasthttp.RequestHandler {
 	}
 
 	router.GET(`/cached`, Cache(testCacheMaxEntries, 1<<10, 365*24*time.Hour /* close enough to an infinite */, handler))
-	router.GET(`/negative_expire_time`, Cache(testCacheMaxEntries, 1<<10, -time.Second, handler))
+	router.GET(`/negative_expire_time`, newCacheFilter(testCacheMaxEntries, 1<<10, -time.Second, handler).Handler)
+
+	for _, initFunc := range initFuncs {
+		initFunc(router, handler)
+	}
 
 	return router.Handler
 }
@@ -136,4 +140,44 @@ func TestCache_evict(t *testing.T) {
 
 	expected := float64(testCacheMaxEntries) * CacheRecentRatio
 	assert.Equal(t, int(expected)+1, evictedCount)
+}
+
+func TestCache_zeroEntries(t *testing.T) {
+	handler := getTestHandler(func(router *fasthttprouter.Router, handler fasthttp.RequestHandler) {
+		router.GET(`/zero_entries`, Cache(testCacheMaxEntries, 0, -time.Second, handler))
+	})
+
+	ctx := &fasthttp.RequestCtx{}
+	ctx.Request.SetRequestURI(`/zero_entries`)
+
+	handler(ctx)
+	assert.Equal(t, 200, ctx.Response.StatusCode())
+	firstResponseBody := string(ctx.Response.Body())
+
+	ctx.ResetBody()
+	handler(ctx)
+	assert.Equal(t, 200, ctx.Response.StatusCode())
+	secondResponseBody := string(ctx.Response.Body())
+
+	assert.NotEqual(t, firstResponseBody, secondResponseBody)
+}
+
+func TestCache_zeroEntrySize(t *testing.T) {
+	handler := getTestHandler(func(router *fasthttprouter.Router, handler fasthttp.RequestHandler) {
+		router.GET(`/zero_entry_size`, Cache(testCacheMaxEntries, 0, -time.Second, handler))
+	})
+
+	ctx := &fasthttp.RequestCtx{}
+	ctx.Request.SetRequestURI(`/zero_entry_size`)
+
+	handler(ctx)
+	assert.Equal(t, 200, ctx.Response.StatusCode())
+	firstResponseBody := string(ctx.Response.Body())
+
+	ctx.ResetBody()
+	handler(ctx)
+	assert.Equal(t, 200, ctx.Response.StatusCode())
+	secondResponseBody := string(ctx.Response.Body())
+
+	assert.NotEqual(t, firstResponseBody, secondResponseBody)
 }
